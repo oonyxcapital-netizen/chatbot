@@ -3,25 +3,13 @@ import threading
 import time
 import os
 
-# ================== ENVIRONMENT VARIABLES WITH FALLBACKS ==================
-TOKENS = [
-    os.getenv("TOKEN1"),
-    os.getenv("TOKEN2"),
-    os.getenv("TOKEN3"),
-    os.getenv("TOKEN4"),
-    os.getenv("TOKEN5"),
-    os.getenv("TOKEN6"),
-    os.getenv("TOKEN7"),
-    os.getenv("TOKEN8"),
-    os.getenv("TOKEN9")
-]
+# Single variable with tokens separated by commas
+TOKENS_STR = os.getenv("TOKENS", "")
+TOKENS = [t.strip() for t in TOKENS_STR.split(",") if t.strip()]
 
-SOURCE_CHANNEL_ID = int(os.getenv("SOURCE_CHANNEL_ID") or "1465133007773106383")
-TARGET_CHANNEL_ID = int(os.getenv("TARGET_CHANNEL_ID") or "1519684660928450692")
+SOURCE_CHANNEL_ID = int(os.getenv("SOURCE_CHANNEL_ID", 1465133007773106383))
+TARGET_CHANNEL_ID = int(os.getenv("TARGET_CHANNEL_ID", 1519684660928450692))
 
-TOKENS = [t for t in TOKENS if t and t.strip()]
-
-# ================== REST OF THE CODE (same as before) ==================
 def run_bot(token):
     intents = discord.Intents.default()
     intents.message_content = True
@@ -41,20 +29,20 @@ def run_bot(token):
             return
 
         try:
-            target_channel = client.get_channel(TARGET_CHANNEL_ID)
-            if target_channel:
+            target = client.get_channel(TARGET_CHANNEL_ID)
+            if target:
                 if message.content:
-                    await target_channel.send(f"**{message.author}** → {message.content}")
-                for attachment in message.attachments:
-                    await target_channel.send(attachment.url)
-                print(f"Copied from {message.author}")
-        except Exception as e:
-            print(f"Error: {e}")
+                    await target.send(f"**{message.author}** → {message.content}")
+                for att in message.attachments:
+                    await target.send(att.url)
+                print(f"Copied by {client.user}")
+        except:
+            pass
 
     try:
         client.run(token)
     except Exception as e:
-        print(f"Token error: {e}")
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
     if not TOKENS:
@@ -66,13 +54,13 @@ if __name__ == "__main__":
     for i, token in enumerate(TOKENS):
         t = threading.Thread(target=run_bot, args=(token,), daemon=True)
         t.start()
-        print(f"Started account {i+1}")
+        print(f"Started {i+1}")
         time.sleep(4)
 
-    print("All accounts started!")
+    print("All started!")
     
     try:
         while True:
             time.sleep(10)
     except KeyboardInterrupt:
-        print("Stopped.")
+        print("Stopped")
